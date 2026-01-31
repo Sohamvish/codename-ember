@@ -34,11 +34,21 @@ export default function SignupPage() {
                 if (isLogin) {
                     router.push("/hearth");
                 } else {
+                    // Create Profile Row manually (redundancy for safety)
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        await supabase.from('profiles').insert({
+                            id: user.id,
+                            username: email.split('@')[0], // Default username from email
+                            avatar_url: null,
+                            updated_at: new Date().toISOString(),
+                        });
+                    }
                     alert("Check your email for the confirmation link!");
                 }
             }
-        } catch (e) {
-            alert("An error occurred");
+        } catch (e: any) {
+            alert("An error occurred: " + e.message);
         } finally {
             setLoading(false);
         }

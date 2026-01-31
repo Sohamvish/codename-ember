@@ -4,20 +4,63 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { CandleFlame } from "@/components/ui/CandleFlame";
 import { Settings, Shield, Moon, LogOut } from "lucide-react";
 
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import { Database } from "@/types/supabase";
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+
 export default function ProfilePage() {
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [loading, setLoading] = useState(true);
+    const supabase = createClient();
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                router.push("/signup");
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (data) setProfile(data);
+            setLoading(false);
+        };
+        fetchProfile();
+    }, [supabase, router]);
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.push("/");
+    };
+
+    if (loading) return <div className="min-h-screen flex items-center justify-center text-stone-500">Loading...</div>;
+
     return (
         <div className="min-h-screen p-4 pt-12 max-w-xl mx-auto space-y-8">
 
             <header className="flex items-center gap-6">
                 <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-stone-800 to-black border border-stone-700 flex items-center justify-center overflow-hidden">
-                        <CandleFlame size="sm" />
+                        {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            <CandleFlame size="sm" />
+                        )}
                     </div>
                     <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-4 border-midnight" title="Online / Safe" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-200">Anonymous Keeper</h1>
-                    <p className="text-stone-500 text-sm">Member since Jan 2026</p>
+                    <h1 className="text-2xl font-bold text-stone-200">{profile?.username || "Anonymous Keeper"}</h1>
+                    <p className="text-stone-500 text-sm">Member since {new Date().getFullYear()}</p>
                 </div>
             </header>
 
@@ -44,11 +87,11 @@ export default function ProfilePage() {
                     <div className="h-px bg-white/5" />
                     <SettingItem icon={Moon} label="Appearance" onClick={() => alert("Dark Mode is enabled by default.")} />
                     <div className="h-px bg-white/5" />
-                    <SettingItem icon={Settings} label="Account Settings" onClick={() => alert("Account Management: Coming Soon")} />
+                    <SettingItem icon={Settings} label="Account Settings" onClick={() => alert(`ID: ${profile?.id}`)} />
                 </GlassCard>
 
                 <button
-                    onClick={() => { alert("Signing out..."); window.location.href = "/"; }}
+                    onClick={handleSignOut}
                     className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl border border-red-900/30 text-red-400 hover:bg-red-950/20 transition-colors"
                 >
                     <LogOut size={18} />

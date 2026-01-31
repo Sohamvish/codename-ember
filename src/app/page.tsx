@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { CandleFlame } from "@/components/ui/CandleFlame";
 import Link from "next/link";
 
+import { QuoteCandle } from "@/components/ui/QuoteCandle";
+
 export default function Home() {
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen p-8 text-center overscroll-none overflow-hidden">
@@ -12,7 +14,7 @@ export default function Home() {
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.08)_0%,rgba(12,10,9,0)_60%)] pointer-events-none" />
 
       {/* Main Content */}
-      <main className="z-10 flex flex-col items-center gap-12 max-w-md w-full">
+      <main className="z-10 flex flex-col items-center gap-12 max-w-md w-full relative">
 
         {/* Header Text */}
         <motion.div
@@ -29,6 +31,18 @@ export default function Home() {
           </p>
         </motion.div>
 
+        {/* Quote Candles - Surrounding the main button */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Top Left */}
+          <QuoteCandle quote="You are stronger than you know." className="pointer-events-auto top-0 -left-12 md:-left-32" delay={1.2} />
+          {/* Top Right */}
+          <QuoteCandle quote="Your story matters." className="pointer-events-auto top-10 -right-8 md:-right-24" delay={1.4} />
+          {/* Bottom Left */}
+          <QuoteCandle quote="Healing is not linear." className="pointer-events-auto bottom-20 -left-6 md:-left-20" delay={1.6} />
+          {/* Bottom Right */}
+          <QuoteCandle quote="There is hope in the dark." className="pointer-events-auto bottom-0 -right-10 md:-right-28" delay={1.8} />
+        </div>
+
         {/* Interactive Candle Button */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -36,7 +50,7 @@ export default function Home() {
           transition={{ delay: 0.5, duration: 1 }}
           className="relative group cursor-pointer"
         >
-          <Link href="/hearth">
+          <Link href="/signup">
             <div className="relative flex flex-col items-center gap-6">
 
               {/* The Flame itself is the button */}
