@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #1c1917;
+  --foreground: #fef3c7;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.glass-panel {
+  background: rgba(28, 25, 23, 0.4);
+  /* More transparent */
+  backdrop-filter: blur(20px) saturate(180%);
+  /* Higher blur + saturation for "liquid" look */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  /* Inner shine */
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(28, 25, 23, 0.5);
+  /* Stone-900 transparent */
+  backdrop-filter: blur(4px);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(251, 191, 36, 0.4);
+  /* Amber/Ember low opacity */
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 191, 36, 0.8);
+  /* Ember high opacity */
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
