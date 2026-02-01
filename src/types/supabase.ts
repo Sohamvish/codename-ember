@@ -65,6 +65,7 @@ export interface Database {
                     user_id: string | null
                     content: string
                     is_anonymous: boolean
+                    likes_count: number
                     created_at: string
                 }
                 Insert: {

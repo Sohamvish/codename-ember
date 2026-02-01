@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import { Database } from "@/types/supabase";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -89,6 +89,25 @@ export function CommentSection({ storyId, initiallyOpen = false }: CommentSectio
                                             </span>
                                         </div>
                                         <p className="text-stone-300 text-sm mt-0.5">{comment.content}</p>
+                                        <div className="flex items-center gap-3 mt-1.5">
+                                            <button
+                                                onClick={async () => {
+                                                    const newComments = comments.map(c =>
+                                                        c.id === comment.id ? { ...c, likes_count: (c.likes_count || 0) + 1 } : c
+                                                    );
+                                                    setComments(newComments);
+
+                                                    await supabase
+                                                        .from('comments')
+                                                        .update({ likes_count: (comment.likes_count || 0) + 1 })
+                                                        .eq('id', comment.id);
+                                                }}
+                                                className="flex items-center gap-1 text-stone-500 hover:text-red-400 transition-colors"
+                                            >
+                                                <Heart size={12} />
+                                                <span className="text-[10px]">{comment.likes_count || 0}</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
+import { useToast } from "@/components/ui/Toast";
+
 export default function SharePage() {
     const [content, setContent] = useState("");
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -17,6 +19,7 @@ export default function SharePage() {
 
     const supabase = createClient();
     const router = useRouter();
+    const { showToast } = useToast();
     const tags = ["Courage", "Healing", "Hope", "Support", "Venting", "Advice"];
 
     const handlePost = async () => {
@@ -24,21 +27,23 @@ export default function SharePage() {
 
         setLoading(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+
             const { error } = await supabase.from('stories').insert({
                 content,
                 tag: [selectedTag],
                 is_anonymous: isAnonymous,
-                // user_id will be handled by RLS or defaulting to current user if auth is set up
+                user_id: user?.id || null
             });
 
             if (error) throw error;
 
             // Reset and redirect
-            alert("Your candle has been lit. 🔥");
+            showToast("Your candle has been lit. 🔥", "success");
             router.push('/hearth');
         } catch (e: any) {
             console.error(e);
-            alert("Failed to share light: " + e.message);
+            showToast("Failed to share light: " + e.message, "error");
         } finally {
             setLoading(false);
         }

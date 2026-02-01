@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   description: "A safe space for courage and shared stories.",
 };
 
+import { ToastProvider } from "@/components/ui/Toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,13 +33,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-midnight text-foreground min-h-screen overflow-x-hidden`}
       >
-        <CustomCursor />
-        <AmbientEmbers />
-        <LiquidBlobs />
-        <main className="w-full h-full min-h-screen relative pb-20">
-          {children}
-        </main>
-        <MobileNav />
+        <ToastProvider>
+          <CustomCursor />
+          <AmbientEmbers />
+          <LiquidBlobs />
+          <main className="w-full h-full min-h-screen relative pb-20">
+            {children}
+          </main>
+          <MobileNav />
+        </ToastProvider>
       </body>
     </html>
   );
