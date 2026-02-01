@@ -276,10 +276,12 @@ export function ChatDrawer() {
                                         {messages.map(m => {
                                             const isMe = m.sender_id === currentUser;
                                             return (
-                                                <div key={m.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+                                                <div key={m.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
                                                     <div className={cn(
-                                                        "max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed",
-                                                        isMe ? "bg-ember text-stone-900 rounded-tr-none" : "bg-stone-800 text-stone-200 rounded-tl-none"
+                                                        "max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm",
+                                                        isMe
+                                                            ? "bg-amber-500/90 text-stone-900 rounded-tr-sm"
+                                                            : "bg-stone-800/90 text-stone-200 rounded-tl-sm border border-white/5"
                                                     )}>
                                                         {m.content}
                                                     </div>

@@ -85,63 +85,53 @@ export default function SignupPage() {
                 </div>
 
                 <GlassCard className="space-y-6 p-8 border-stone-800/50 bg-stone-900/60 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-                    <div className="space-y-4">
-                        {/* Username Input - Only for Signup */}
-                        {!isLogin && (
+                    <form onSubmit={(e) => { e.preventDefault(); handleAuth(); }} className="space-y-6">
+                        <div className="space-y-4">
+                            {/* Username Input - Only for Signup */}
+                            {!isLogin && (
+                                <div className="relative group">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors font-mono">@</span>
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="Keeper Name"
+                                        className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
+                                    />
+                                </div>
+                            )}
+
                             <div className="relative group">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors font-mono">@</span>
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
                                 <input
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="Keeper Name"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Email"
                                     className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
                                 />
                             </div>
-                        )}
-
-                        <div className="relative group">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Email"
-                                className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
-                            />
+                            <div className="relative group">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Password"
+                                    className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
+                                />
+                            </div>
                         </div>
-                        <div className="relative group">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Password"
-                                className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
-                            />
-                        </div>
-                    </div>
 
-                    <button
-                        onClick={handleAuth}
-                        disabled={loading}
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-ember to-orange-600 text-black font-bold shadow-lg shadow-orange-900/20 hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <span>{loading ? "Processing..." : (isLogin ? "Sign In" : "Create Account")}</span>
-                        {!loading && <ArrowRight size={18} />}
-                    </button>
-
-                    <div className="relative flex items-center py-2">
-                        <div className="flex-grow border-t border-stone-800"></div>
-                        <span className="flex-shrink-0 mx-4 text-xs text-stone-600">OR</span>
-                        <div className="flex-grow border-t border-stone-800"></div>
-                    </div>
-
-                    <Link href="/hearth">
-                        <button className="w-full py-3 rounded-xl border border-stone-800 bg-black/20 text-stone-400 hover:bg-black/40 hover:text-stone-200 transition-colors text-sm font-medium">
-                            Continue as Guest
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-ember to-orange-600 text-black font-bold shadow-lg shadow-orange-900/20 hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span>{loading ? "Processing..." : (isLogin ? "Sign In" : "Create Account")}</span>
+                            {!loading && <ArrowRight size={18} />}
                         </button>
-                    </Link>
+                    </form>
                 </GlassCard>
 
                 <p className="text-center mt-6 text-xs text-stone-500">

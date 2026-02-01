@@ -9,8 +9,8 @@ import { motion } from "framer-motion";
 export function MobileNav() {
     const pathname = usePathname();
 
-    // Hide nav on landing page
-    if (pathname === "/") return null;
+    // Hide nav on landing page and signup page
+    if (pathname === "/" || pathname === "/signup") return null;
 
     const navItems = [
         { href: "/hearth", label: "Hearth", icon: Flame },
