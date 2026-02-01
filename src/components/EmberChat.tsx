@@ -48,7 +48,7 @@ export function EmberChat() {
             const chatData = await chatRes.json();
             const script = chatData.text;
 
-            setMessages(prev => [...prev, { role: "assistant", content: `Let's breathe together. 🌿 (Generating audio...) \n\n"${script}"` }]);
+            setMessages(prev => [...prev, { role: "assistant", content: "Let's take a moment together now." }]);
 
             // 2. Get Audio from ElevenLabs
             const audioRes = await fetch("/api/meditate", {
@@ -79,36 +79,47 @@ export function EmberChat() {
         e?.preventDefault();
         if (!input.trim() || loading) return;
 
-        const userMessage = { role: "user" as const, content: input };
-        setMessages(prev => [...prev, userMessage]);
+        const userMessageContent = input.trim();
         setInput("");
+        setMessages(prev => [...prev, { role: "user", content: userMessageContent }]);
         setLoading(true);
 
         try {
+            // 1. Check with Snowflake moderation first
+            const moderationRes = await fetch("/api/moderate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userMessageContent }),
+            });
+
+            const moderationData = await moderationRes.json();
+
+            // If content is flagged, show warning and don't send to chat
+            if (!moderationData.safe) {
+                setMessages(prev => [...prev, {
+                    role: "assistant",
+                    content: moderationData.message || "I'm concerned about what you shared. If you're in crisis, please reach out to a crisis helpline immediately. 🧡 I'm here to listen, but I want to make sure you're safe."
+                }]);
+                setLoading(false);
+                return;
+            }
+
+            // 2. If safe, proceed with chat
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    messages: [...messages, userMessage]
-                }),
+                body: JSON.stringify({ messages: [...messages, { role: "user", content: userMessageContent }] }),
             });
 
             const data = await response.json();
-
-            if (data.error) {
-                setMessages(prev => [...prev, {
-                    role: "assistant",
-                    content: `I'm having trouble. Error: ${data.details || data.error}`
-                }]);
-            } else {
+            if (data.text) {
                 setMessages(prev => [...prev, { role: "assistant", content: data.text }]);
+            } else if (data.error) {
+                setMessages(prev => [...prev, { role: "assistant", content: `I'm having trouble. Error: ${data.details || data.error}` }]);
             }
         } catch (error) {
-            console.error(error);
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: `Connection error: ${error instanceof Error ? error.message : "Unknown error"}`
-            }]);
+            console.error("Error:", error);
+            setMessages(prev => [...prev, { role: "assistant", content: `Connection error: ${error instanceof Error ? error.message : "Unknown error"}` }]);
         } finally {
             setLoading(false);
         }

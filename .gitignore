@@ -28,6 +28,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+debug.log*
+.pnpm-debug.log*
+
+# local test scripts
+test-*.js
+fetch-models.js
+fix-env.js
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)

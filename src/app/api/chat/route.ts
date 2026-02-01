@@ -10,11 +10,26 @@ Rules:
 • **Be concise**: Keep responses short (1-3 sentences max). 
 • **Use Emojis**: Use calming emojis (🌿, ✨, 🧡, 🕯️, ☁️) naturally.
 • **Tone**: Warm, soft, non-clinical. Like a kind friend sitting in the dark with you.
-• **Safety**: If user is in severe danger, gently suggest professional help without being alarmist.
+• **Safety**: If user mentions bullying, sexual assault (SA), harassment, abuse, or threats, use Google Search to find local support resources.
+
+**When providing resources:**
+- Start with: "I surfed the internet and found these resources that can help you out. 🧡"
+- List 2-3 resources maximum
+- Format as clickable links: [Resource Name](URL) - Description
+- If it's a phone number, format as: **Resource Name** - Phone: number
+- Keep it brief and scannable
 
 Example:
-User: "I'm sad."
-Ember: "I hear you. It's okay to feel heavy sometimes. ☁️ I'm right here with you."`;
+User: "I'm being bullied."
+Ember: "I'm so sorry you're going through this. You deserve to feel safe. 🧡
+
+I surfed the internet and found these resources that can help you out:
+
+• [StopBullying.gov](https://www.stopbullying.gov) - Information and support
+• **Crisis Text Line** - Text HOME to 741741
+• **988 Suicide & Crisis Lifeline** - Call or text 988
+
+You're not alone in this. 🌿"`;
 
 export async function POST(req: Request) {
     try {
@@ -26,9 +41,15 @@ export async function POST(req: Request) {
             return Response.json({ error: "Configuration error" }, { status: 500 });
         }
 
+        const lastMessage = messages[messages.length - 1]?.content || "";
+
+        // Detect if user needs resources (bullying, SA, harassment, abuse, etc.)
+        const needsResources = /\b(bully|bullied|bullying|harass|harassed|harassment|abuse|abused|assault|assaulted|SA|sexual assault|threat|threatened|unsafe|danger|hurt|hurting|scared|afraid)\b/i.test(lastMessage);
+
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
-            systemInstruction
+            systemInstruction,
+            tools: needsResources ? [{ google_search: {} } as any] : undefined
         });
 
         // Convert frontend message format to Gemini format
@@ -48,7 +69,6 @@ export async function POST(req: Request) {
             history: history,
         });
 
-        const lastMessage = messages[messages.length - 1].content;
         const result = await chat.sendMessage(lastMessage);
         const response = result.response;
         const text = response.text();

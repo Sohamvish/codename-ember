@@ -68,7 +68,7 @@ export function MeditationPlayer({ audioUrl, onClose }: MeditationPlayerProps) {
 
                 <div className="text-center space-y-2">
                     <h3 className="text-xl font-medium text-ember">Guided Meditation</h3>
-                    <p className="text-sm text-stone-400">Follow the voice. Breathe.</p>
+                    <p className="text-sm text-stone-400">Follow the voice. Breathe. 🔥</p>
                 </div>
 
                 {/* Breathing Animation */}
@@ -109,7 +109,7 @@ export function MeditationPlayer({ audioUrl, onClose }: MeditationPlayerProps) {
                 </div>
 
                 <div className="text-xs text-stone-600">
-                    Voice powered by ElevenLabs
+                    Voice powered by ElevenLabs • Script by Snowflake AI
                 </div>
             </div>
         </motion.div>

@@ -21,7 +21,7 @@ async function testElevenLabs() {
             },
             body: JSON.stringify({
                 text: "Hello, this is a test.",
-                model_id: "eleven_monolingual_v1",
+                model_id: "eleven_multilingual_v2",
                 voice_settings: {
                     stability: 0.5,
                     similarity_boost: 0.75,
