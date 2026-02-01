@@ -2,14 +2,13 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { CandleFlame } from "@/components/ui/CandleFlame";
-import { Heart, MoreHorizontal } from "lucide-react";
+import { Heart, MoreHorizontal, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { Database } from "@/types/supabase";
 import { motion } from "framer-motion";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { useChat } from "@/context/ChatContext";
-import { MessageCircle } from "lucide-react";
 import { DMInviteModal } from "@/components/ui/DMInviteModal";
 
 type Story = Database['public']['Tables']['stories']['Row'];
@@ -60,8 +59,6 @@ export default function HearthPage() {
         };
 
         fetchStoriesAndProfiles();
-
-        // ... (Realtime subscription kept simple or removed for brevity, keeps existing if needed)
     }, []);
 
     return (

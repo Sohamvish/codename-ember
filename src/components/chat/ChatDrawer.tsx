@@ -74,6 +74,14 @@ export function ChatDrawer() {
                     setActiveConversation(existing.id);
                 } else {
                     // 3. Create new
+                    if (currentUser === targetUserId) {
+                        console.warn("Cannot create conversation with self");
+                        setLoading(false);
+                        return;
+                    }
+
+                    console.log("Creating conversation...", { currentUser, targetUserId });
+
                     const { data: newConvo, error } = await supabase
                         .from("conversations")
                         .insert({ participant1_id: currentUser, participant2_id: targetUserId })
@@ -85,6 +93,13 @@ export function ChatDrawer() {
                         fetchConversations();
                     } else {
                         console.error("Failed to create conversation:", error);
+                        console.error("Error details:", JSON.stringify(error, null, 2));
+                        console.error("Payload:", { participant1_id: currentUser, participant2_id: targetUserId });
+
+                        // If 403, it's RLS. If code is 23514, it's CHECK violation (self-msg)
+                        if (error && error.code === "42501") {
+                            console.error("RLS Policy Violation. User may not be authenticated or policy is missing.");
+                        }
                     }
                 }
             }
@@ -278,12 +293,20 @@ export function ChatDrawer() {
                                             return (
                                                 <div key={m.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
                                                     <div className={cn(
-                                                        "max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm",
+                                                        "max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm relative group",
                                                         isMe
                                                             ? "bg-amber-500/90 text-stone-900 rounded-tr-sm"
                                                             : "bg-stone-800/90 text-stone-200 rounded-tl-sm border border-white/5"
                                                     )}>
                                                         {m.content}
+                                                        <div className={cn(
+                                                            "text-[10px] mt-1 space-x-1 flex items-center",
+                                                            isMe ? "text-stone-800/60 justify-end" : "text-stone-500 justify-start"
+                                                        )}>
+                                                            <span>
+                                                                {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             );

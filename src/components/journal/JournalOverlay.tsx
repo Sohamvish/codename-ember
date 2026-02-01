@@ -43,10 +43,11 @@ export function JournalOverlay() {
             {/* Top Right Trigger Button - Visible on Desktop/Tablet */}
             <button
                 onClick={() => setIsJournalOpen(true)}
-                className="fixed top-6 right-6 z-50 p-3 bg-black/20 backdrop-blur-md border border-white/10 rounded-full text-stone-400 hover:text-ember hover:bg-black/40 transition-all hover:scale-105 shadow-lg group hidden md:flex"
-                title="Open Journal"
+                className="fixed top-6 right-6 z-50 p-3 bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl text-stone-400 hover:text-ember hover:bg-black/40 transition-all hover:scale-105 shadow-lg group hidden md:flex flex-col items-center gap-1"
+                title="Vent?"
             >
-                <Book size={20} className="group-hover:stroke-ember" />
+                <Book size={28} className="group-hover:stroke-ember" />
+                <span className="text-xs font-medium text-ember">Vent?</span>
             </button>
 
             <JournalDrawer

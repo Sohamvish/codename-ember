@@ -7,6 +7,7 @@ import Link from "next/link";
 
 
 export default function Home() {
+
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen p-8 text-center overscroll-none overflow-hidden">
 

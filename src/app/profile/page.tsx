@@ -51,17 +51,31 @@ export default function ProfilePage() {
                 setMyStories(stories);
                 const candlesLit = stories.length;
 
-                // Fetch Comments for "Lives Touched"
-                const { data: comments } = await supabase
+                // Fetch Comments for "Lives Touched" - comments ON my stories
+                const storyIds = stories.map(s => s.id);
+                let livesTouched = 0;
+
+                if (storyIds.length > 0) {
+                    const { data: commentsOnMyStories } = await supabase
+                        .from('comments')
+                        .select('*')
+                        .in('story_id', storyIds)
+                        .order('created_at', { ascending: false });
+
+                    if (commentsOnMyStories) {
+                        livesTouched = commentsOnMyStories.length;
+                    }
+                }
+
+                // Fetch MY comments (for display)
+                const { data: myComments } = await supabase
                     .from('comments')
                     .select('*')
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false });
 
-                let livesTouched = 0;
-                if (comments) {
-                    setMyComments(comments);
-                    livesTouched = comments.length;
+                if (myComments) {
+                    setMyComments(myComments);
                 }
 
                 setMetrics({
@@ -72,6 +86,41 @@ export default function ProfilePage() {
             }
 
             setLoading(false);
+
+            // Set up realtime subscription for comments on MY stories
+            const channel = supabase
+                .channel('profile-comments')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'comments'
+                    },
+                    async (payload) => {
+                        console.log('Comment change detected:', payload);
+                        // Refetch stories to get updated story IDs
+                        const { data: updatedStories } = await supabase
+                            .from('stories')
+                            .select('id')
+                            .eq('user_id', user.id);
+
+                        if (updatedStories && updatedStories.length > 0) {
+                            const storyIds = updatedStories.map(s => s.id);
+                            const { count } = await supabase
+                                .from('comments')
+                                .select('*', { count: 'exact', head: true })
+                                .in('story_id', storyIds);
+
+                            setMetrics(prev => ({ ...prev, livesTouched: count || 0 }));
+                        }
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
         };
         fetchProfile();
     }, [supabase, router]);

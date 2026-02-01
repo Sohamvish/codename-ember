@@ -6,6 +6,8 @@ import { Database } from "@/types/supabase";
 import { MessageCircle, Send, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { ModerationWarningModal } from "@/components/ui/ModerationWarningModal";
+import { BannedModal } from "@/components/ui/BannedModal";
 
 type Comment = Database['public']['Tables']['comments']['Row'];
 
@@ -19,6 +21,10 @@ export function CommentSection({ storyId, initiallyOpen = false }: CommentSectio
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState("");
     const [loading, setLoading] = useState(false);
+    const [warningModalOpen, setWarningModalOpen] = useState(false);
+    const [bannedModalOpen, setBannedModalOpen] = useState(false);
+    const [moderationReason, setModerationReason] = useState("");
+    const [isBanned, setIsBanned] = useState(false);
     const supabase = createClient();
 
     useEffect(() => {
@@ -39,21 +45,120 @@ export function CommentSection({ storyId, initiallyOpen = false }: CommentSectio
 
     const handlePostComment = async () => {
         if (!newComment.trim()) return;
+        if (isBanned) {
+            setBannedModalOpen(true);
+            return;
+        }
+
         setLoading(true);
 
-        const { error } = await supabase.from('comments').insert({
-            story_id: storyId,
-            content: newComment,
-            is_anonymous: false // Can add toggle later
-            // user_id defaults to auth user
-        });
+        try {
+            // Step 1: Check if user is already banned
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                alert("Please log in to comment");
+                setLoading(false);
+                return;
+            }
 
-        if (!error) {
-            setNewComment("");
-            fetchComments(); // Refresh list
-        } else {
-            alert("Failed to post comment");
+            const { data: moderationData } = await supabase
+                .from('user_moderation')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            if (moderationData?.is_banned) {
+                setIsBanned(true);
+                setModerationReason(moderationData.ban_reason || "Repeated violations of community guidelines");
+                setBannedModalOpen(true);
+                setLoading(false);
+                return;
+            }
+
+            // Step 2: Moderate content with Snowflake Cortex
+            console.log("🔍 Checking content for toxicity:", newComment);
+            const moderationResponse = await fetch('/api/moderate-content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newComment }),
+            });
+
+            console.log("📡 Moderation API response status:", moderationResponse.status);
+            const moderation = await moderationResponse.json();
+            console.log("🤖 Moderation result:", moderation);
+
+            if (moderation.isToxic) {
+                // Content is toxic - check strike count
+                const currentStrikes = moderationData?.strike_count || 0;
+
+                if (currentStrikes === 0) {
+                    // First offense - warn and increment strike
+                    await supabase.from('user_moderation').upsert({
+                        user_id: user.id,
+                        strike_count: 1,
+                        updated_at: new Date().toISOString(),
+                    });
+
+                    // Log the warning
+                    await supabase.from('moderation_logs').insert({
+                        user_id: user.id,
+                        content_type: 'comment',
+                        flagged_content: newComment,
+                        ai_reason: moderation.reason,
+                        action_taken: 'warning',
+                    });
+
+                    setModerationReason(moderation.reason);
+                    setWarningModalOpen(true);
+                    setNewComment(""); // Clear the toxic comment
+                } else {
+                    // Second offense - permanent ban
+                    await supabase.from('user_moderation').upsert({
+                        user_id: user.id,
+                        strike_count: currentStrikes + 1,
+                        is_banned: true,
+                        ban_reason: moderation.reason,
+                        banned_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                    });
+
+                    // Log the ban
+                    await supabase.from('moderation_logs').insert({
+                        user_id: user.id,
+                        content_type: 'comment',
+                        flagged_content: newComment,
+                        ai_reason: moderation.reason,
+                        action_taken: 'ban',
+                    });
+
+                    setIsBanned(true);
+                    setModerationReason(moderation.reason);
+                    setBannedModalOpen(true);
+                    setNewComment("");
+                }
+
+                setLoading(false);
+                return;
+            }
+
+            // Step 3: Content is safe - post comment
+            const { error } = await supabase.from('comments').insert({
+                story_id: storyId,
+                content: newComment,
+                is_anonymous: false,
+            });
+
+            if (!error) {
+                setNewComment("");
+                fetchComments();
+            } else {
+                alert("Failed to post comment");
+            }
+        } catch (error) {
+            console.error("Comment posting error:", error);
+            alert("An error occurred. Please try again.");
         }
+
         setLoading(false);
     };
 
@@ -132,6 +237,17 @@ export function CommentSection({ storyId, initiallyOpen = false }: CommentSectio
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Moderation Modals */}
+            <ModerationWarningModal
+                isOpen={warningModalOpen}
+                onClose={() => setWarningModalOpen(false)}
+                reason={moderationReason}
+            />
+            <BannedModal
+                isOpen={bannedModalOpen}
+                reason={moderationReason}
+            />
         </div>
     );
 }
