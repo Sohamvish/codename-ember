@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Flame, PenLine, HeartHandshake, User } from "lucide-react";
+import { Flame, PenLine, HeartHandshake, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -14,6 +14,7 @@ export function MobileNav() {
 
     const navItems = [
         { href: "/hearth", label: "Hearth", icon: Flame },
+        { href: "/ember", label: "Ember", icon: Sparkles },
         { href: "/share", label: "Share", icon: PenLine },
         { href: "/resources", label: "Help", icon: HeartHandshake },
         { href: "/profile", label: "Me", icon: User },
