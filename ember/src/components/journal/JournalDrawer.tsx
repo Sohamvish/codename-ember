@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Book, ChevronDown, Calendar, Send } from "lucide-react";
+import { X, Book, Flame, Calendar, Send } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { BurnAnimation } from "@/components/ui/BurnAnimation";
 
 interface JournalEntry {
     id: string;
@@ -22,6 +23,9 @@ export function JournalDrawer({ isOpen, onClose }: JournalDrawerProps) {
     const [newEntry, setNewEntry] = useState("");
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [mode, setMode] = useState<"keep" | "let_go">("keep");
+    const [isBurning, setIsBurning] = useState(false);
+
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const supabase = createClient();
 
@@ -47,7 +51,7 @@ export function JournalDrawer({ isOpen, onClose }: JournalDrawerProps) {
     const fetchEntries = async () => {
         setLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return; // Handle no user (maybe show login prompt or just return)
+        if (!user) return;
 
         const { data, error } = await supabase
             .from("journal_entries")
@@ -61,8 +65,15 @@ export function JournalDrawer({ isOpen, onClose }: JournalDrawerProps) {
         setLoading(false);
     };
 
-    const handleSave = async () => {
+    const handleAction = async () => {
         if (!newEntry.trim()) return;
+
+        if (mode === "let_go") {
+            setIsBurning(true);
+            return; // Animation handles the rest via onComplete callback
+        }
+
+        // Keep Mode (Save to DB)
         setSaving(true);
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -80,6 +91,12 @@ export function JournalDrawer({ isOpen, onClose }: JournalDrawerProps) {
             }
         }
         setSaving(false);
+    };
+
+    const handleBurnComplete = () => {
+        setNewEntry("");
+        setIsBurning(false);
+        // Optional: Show a toast here "Burden released."
     };
 
     return (
@@ -119,22 +136,70 @@ export function JournalDrawer({ isOpen, onClose }: JournalDrawerProps) {
 
                         {/* Content Area */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-6">
+
+                            {/* Mode Toggle */}
+                            <div className="flex gap-2 mb-2 bg-stone-900/50 p-1 rounded-lg border border-white/5 w-fit">
+                                <button
+                                    onClick={() => setMode("keep")}
+                                    className={cn(
+                                        "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                                        mode === "keep"
+                                            ? "bg-stone-800 text-stone-200 shadow-sm"
+                                            : "text-stone-500 hover:text-stone-300"
+                                    )}
+                                >
+                                    Keep
+                                </button>
+                                <button
+                                    onClick={() => setMode("let_go")}
+                                    className={cn(
+                                        "px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1",
+                                        mode === "let_go"
+                                            ? "bg-orange-900/30 text-orange-200 shadow-sm border border-orange-500/20"
+                                            : "text-stone-500 hover:text-orange-400"
+                                    )}
+                                >
+                                    <Flame size={12} /> Let Go
+                                </button>
+                            </div>
+
                             {/* New Entry Input */}
-                            <div className="bg-black/20 rounded-xl p-4 border border-stone-800 focus-within:border-ember/50 transition-colors">
+                            <div className={cn(
+                                "relative rounded-xl p-4 border transition-all duration-[1400ms] delay-[800ms] ease-in overflow-hidden", // Wait 0.8s, then fly off in 1.4s
+                                mode === "let_go"
+                                    ? "bg-orange-950/10 border-orange-900/30 shadow-[inset_0_0_20px_rgba(251,146,60,0.05)]"
+                                    : "bg-black/20 border-stone-800 focus-within:border-ember/50",
+                                isBurning && "translate-y-[-800px] rotate-12 opacity-0 scale-90"
+                            )}>
+                                {isBurning && <BurnAnimation onComplete={handleBurnComplete} />}
+
                                 <textarea
                                     ref={textareaRef}
                                     value={newEntry}
                                     onChange={(e) => setNewEntry(e.target.value)}
-                                    placeholder="What's on your mind today?"
-                                    className="w-full bg-transparent border-none outline-none focus:ring-0 resize-none min-h-[120px] text-stone-200 placeholder:text-stone-600"
+                                    placeholder={mode === "let_go"
+                                        ? "Pour it out. It won't be saved."
+                                        : "What's on your mind today?"}
+                                    className={cn(
+                                        "w-full bg-transparent border-none outline-none focus:ring-0 resize-none min-h-[120px] placeholder:text-stone-600 transition-all duration-[1400ms] delay-[800ms]",
+                                        mode === "let_go" ? "text-orange-100/90" : "text-stone-200",
+                                        isBurning && "opacity-0 translate-y-[-400px] rotate-6"
+                                    )}
                                 />
-                                <div className="flex justify-end mt-2">
+                                <div className="flex justify-end mt-2 relative z-10">
                                     <button
-                                        onClick={handleSave}
-                                        disabled={saving || !newEntry.trim()}
-                                        className="flex items-center gap-2 px-4 py-2 bg-ember text-black rounded-lg text-sm font-medium hover:bg-ember-glow disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        onClick={handleAction}
+                                        disabled={saving || isBurning || !newEntry.trim()}
+                                        className={cn(
+                                            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+                                            mode === "let_go"
+                                                ? "bg-gradient-to-r from-orange-700 to-red-600 text-white hover:brightness-110 shadow-lg shadow-orange-900/20"
+                                                : "bg-ember text-black hover:bg-ember-glow"
+                                        )}
                                     >
-                                        {saving ? "Saving..." : <><Send size={14} /> Save Entry</>}
+                                        {saving ? "Saving..." : (
+                                            mode === "let_go" ? <><Flame size={14} /> Cast to Fire</> : <><Send size={14} /> Save Entry</>
+                                        )}
                                     </button>
                                 </div>
                             </div>

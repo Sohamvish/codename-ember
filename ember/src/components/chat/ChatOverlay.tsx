@@ -4,13 +4,14 @@ import { MessageSquare } from "lucide-react";
 import { useChat } from "@/context/ChatContext";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { AuthChangeEvent, Session, Subscription } from "@supabase/supabase-js";
 
 export function ChatOverlay() {
     const { openChat, isOpen } = useChat();
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
-        let subscription: any;
+        let subscription: Subscription | null = null;
         const setup = async () => {
             const supabase = await import("@/lib/supabase").then(m => m.createClient());
 
@@ -21,7 +22,7 @@ export function ChatOverlay() {
             check();
 
             // Listen for auth changes (sign in / sign out)
-            const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+            const { data } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
                 setVisible(!!session);
             });
             subscription = data.subscription;
