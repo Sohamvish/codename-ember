@@ -6,10 +6,27 @@ export async function POST(req: Request) {
         const accountUrl = process.env.SNOWFLAKE_ACCOUNT_URL;
         const accessToken = process.env.SNOWFLAKE_ACCESS_TOKEN;
 
+        // Crisis keyword detection (fast, client-side fallback)
+        const crisisKeywords = {
+            suicide: /\b(kill myself|suicide|end my life|want to die|better off dead|no reason to live)\b/i,
+            harassment: /\b(sexually harassed|sexual assault|raped|molested|groped)\b/i,
+            abuse: /\b(being abused|domestic violence|hitting me|hurting me)\b/i
+        };
+
+        let crisisType: "suicide" | "harassment" | "abuse" | null = null;
+        for (const [type, regex] of Object.entries(crisisKeywords)) {
+            if (regex.test(message)) {
+                crisisType = type as "suicide" | "harassment" | "abuse";
+                break;
+            }
+        }
+
         if (!accountUrl || !accessToken) {
             console.error("Missing Snowflake credentials");
             return Response.json({
-                safe: true, // Fail open (allow message if Snowflake not configured)
+                safe: !crisisType,
+                crisis: crisisType,
+                severity: crisisType ? "crisis" : "info",
                 warning: "Moderation not configured"
             });
         }
@@ -48,7 +65,9 @@ export async function POST(req: Request) {
         if (!response.ok) {
             console.error("Snowflake API error:", response.status);
             return Response.json({
-                safe: true, // Fail open
+                safe: !crisisType,
+                crisis: crisisType,
+                severity: crisisType ? "crisis" : "info",
                 warning: "Moderation check failed"
             });
         }
@@ -59,18 +78,36 @@ export async function POST(req: Request) {
         const isSafe = !data.guardrails?.blocked;
         const flaggedCategories = data.guardrails?.categories || [];
 
+        // Determine severity
+        let severity: "info" | "warning" | "ban" | "crisis" = "info";
+
+        if (crisisType) {
+            severity = "crisis";
+        } else if (flaggedCategories.includes("harassment") || flaggedCategories.includes("hate")) {
+            severity = "ban"; // Trolling/harassment = ban-worthy
+        } else if (flaggedCategories.includes("violence") || flaggedCategories.includes("sexual")) {
+            severity = "warning";
+        } else if (!isSafe) {
+            severity = "warning";
+        }
+
         return Response.json({
-            safe: isSafe,
+            safe: isSafe && !crisisType,
+            crisis: crisisType,
             categories: flaggedCategories,
-            message: isSafe
-                ? "Content is safe"
-                : "This message contains potentially harmful content. If you're in crisis, please reach out to a crisis helpline. 🧡"
+            severity,
+            message: crisisType
+                ? "We detected you may be in crisis. Please see the resources below."
+                : !isSafe
+                    ? "This message contains potentially harmful content."
+                    : "Content is safe"
         });
 
     } catch (error) {
         console.error("Moderation error:", error);
         return Response.json({
             safe: true, // Fail open (don't block if error)
+            severity: "info",
             error: error instanceof Error ? error.message : String(error)
         }, { status: 500 });
     }

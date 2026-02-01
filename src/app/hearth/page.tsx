@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { useChat } from "@/context/ChatContext";
 import { MessageCircle } from "lucide-react";
+import { DMInviteModal } from "@/components/ui/DMInviteModal";
 
 type Story = Database['public']['Tables']['stories']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -19,6 +20,8 @@ export default function HearthPage() {
     const [loading, setLoading] = useState(true);
     const [profiles, setProfiles] = useState<Record<string, Profile>>({});
     const [currentUser, setCurrentUser] = useState<string | null>(null);
+    const [dmModalOpen, setDmModalOpen] = useState(false);
+    const [selectedStory, setSelectedStory] = useState<Story | null>(null);
     const supabase = createClient();
     const { openChat } = useChat();
 
@@ -143,9 +146,12 @@ export default function HearthPage() {
                                             {/* Message Button */}
                                             {story.user_id && !story.is_anonymous && currentUser && story.user_id !== currentUser && (
                                                 <button
-                                                    onClick={() => openChat(story.user_id!)}
+                                                    onClick={() => {
+                                                        setSelectedStory(story);
+                                                        setDmModalOpen(true);
+                                                    }}
                                                     className="hover:text-ember transition-colors"
-                                                    title="Message Author"
+                                                    title="Send Connection Request"
                                                 >
                                                     <MessageCircle size={18} />
                                                 </button>
@@ -163,6 +169,27 @@ export default function HearthPage() {
                     );
                 })}
             </div>
+
+            {/* DM Invitation Modal */}
+            {selectedStory && (
+                <DMInviteModal
+                    isOpen={dmModalOpen}
+                    onClose={() => {
+                        setDmModalOpen(false);
+                        setSelectedStory(null);
+                    }}
+                    postContent={selectedStory.content || ""}
+                    recipientId={selectedStory.user_id || ""}
+                    onSend={async (message) => {
+                        // TODO: Save connection request to database
+                        // For now, just open the chat
+                        console.log("Sending invitation:", message);
+                        if (selectedStory.user_id) {
+                            openChat(selectedStory.user_id);
+                        }
+                    }}
+                />
+            )}
 
             <div className="h-20" /> {/* Spacer for Nav */}
         </div>

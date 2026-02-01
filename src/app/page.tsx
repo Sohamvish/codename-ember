@@ -26,7 +26,7 @@ export default function Home() {
           <h1 className="text-6xl font-bold tracking-tight bg-gradient-to-br from-amber-100 to-amber-600 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.2)]">
             Ember
           </h1>
-          <p className="text-lg text-stone-400 font-light tracking-wide">
+          <p className="text-lg text-stone-400 font-light tracking-wide relative z-10">
             Where courage burns brighter together.
           </p>
         </motion.div>
