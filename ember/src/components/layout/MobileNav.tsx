@@ -21,7 +21,7 @@ export function MobileNav() {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-6 safely-padded-bottom pointer-events-none">
-            <nav className="glass-panel mx-auto max-w-sm rounded-full px-6 py-3 flex justify-between items-center shadow-lg shadow-black/40 pointer-events-auto">
+            <nav className="glass-panel mx-auto max-w-sm rounded-full px-6 py-3 flex justify-between items-center shadow-lg shadow-black/40 pointer-events-auto backdrop-blur-xl bg-black/40 border border-white/10">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;

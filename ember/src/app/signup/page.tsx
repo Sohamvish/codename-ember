@@ -10,17 +10,26 @@ import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 
+import { useToast } from "@/components/ui/Toast";
+
 export default function SignupPage() {
     const [isLogin, setIsLogin] = useState(false);
     const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
     // Initialize Supabase client
     const supabase = createClient();
     const router = useRouter();
+    const { showToast } = useToast();
 
     const handleAuth = async () => {
+        if (!isLogin && !username) {
+            showToast("Please choose a Keeper Name.", "error");
+            return;
+        }
+
         setLoading(true);
         try {
             const { error } = isLogin
@@ -28,17 +37,28 @@ export default function SignupPage() {
                 : await supabase.auth.signUp({ email, password });
 
             if (error) {
-                alert(error.message);
+                showToast(error.message, "error");
             } else {
                 // Success!
                 if (isLogin) {
+                    showToast("Welcome back, keeper.", "success");
                     router.push("/hearth");
                 } else {
-                    alert("Check your email for the confirmation link!");
+                    // Create Profile Row manually (redundancy for safety)
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        await supabase.from('profiles').insert({
+                            id: user.id,
+                            username: username, // Use custom username
+                            avatar_url: null,
+                            updated_at: new Date().toISOString(),
+                        });
+                    }
+                    showToast("Check your email for the confirmation link!", "info");
                 }
             }
-        } catch (e) {
-            alert("An error occurred");
+        } catch (e: any) {
+            showToast("An error occurred: " + e.message, "error");
         } finally {
             setLoading(false);
         }
@@ -66,6 +86,20 @@ export default function SignupPage() {
 
                 <GlassCard className="space-y-6 p-8 border-stone-800/50 bg-stone-900/60 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
                     <div className="space-y-4">
+                        {/* Username Input - Only for Signup */}
+                        {!isLogin && (
+                            <div className="relative group">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors font-mono">@</span>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="Keeper Name"
+                                    className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
+                                />
+                            </div>
+                        )}
+
                         <div className="relative group">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
                             <input
