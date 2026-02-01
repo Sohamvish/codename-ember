@@ -9,16 +9,39 @@ interface QuoteCandleProps {
     quote: string;
     className?: string;
     delay?: number;
+    size?: "sm" | "md";
 }
 
-export function QuoteCandle({ quote, className, delay = 0 }: QuoteCandleProps) {
+export function QuoteCandle({ quote, className, delay = 0, size = "sm" }: QuoteCandleProps) {
     const [isHovered, setIsHovered] = useState(false);
+
+    const floatParams = {
+        y: [0, -15, 0],
+        rotate: [0, 5, -5, 0],
+        transition: {
+            duration: 5 + Math.random() * 3, // Random duration between 5-8s
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+            delay: Math.random() * 2
+        }
+    };
 
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay, duration: 1, type: "spring" }}
+            animate={{
+                opacity: 1,
+                scale: 1,
+                y: floatParams.y,
+                rotate: floatParams.rotate
+            }}
+            // @ts-ignore - complex transition types
+            transition={{
+                opacity: { delay, duration: 1 },
+                scale: { delay, duration: 1 },
+                y: floatParams.transition,
+                rotate: floatParams.transition
+            }}
             className={cn("absolute cursor-pointer", className)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -48,7 +71,7 @@ export function QuoteCandle({ quote, className, delay = 0 }: QuoteCandleProps) {
                     }}
                     className="relative"
                 >
-                    <CandleFlame size="sm" className={cn("opacity-70 hover:opacity-100 transition-opacity", isHovered && "scale-110")} />
+                    <CandleFlame size={size} className={cn("opacity-70 hover:opacity-100 transition-opacity", isHovered && "scale-110")} />
 
                     {/* Candle Stick Base (Optional, kept minimal) */}
                     <div className="w-2 h-3 bg-stone-800/50 mx-auto -mt-1 rounded-sm blur-[1px]" />

@@ -12,7 +12,7 @@ export function CandleFlame({ className, size = "md" }: { className?: string, si
 
     return (
         <div className={cn("relative flex items-end justify-center", sizeClasses[size], className)}>
-            {/* Outer Glow */}
+            {/* Outer Glow - Optimized */}
             <motion.div
                 animate={{
                     scale: [1, 1.1, 1],
@@ -23,7 +23,7 @@ export function CandleFlame({ className, size = "md" }: { className?: string, si
                     repeat: Infinity,
                     ease: "easeInOut"
                 }}
-                className="absolute bottom-0 w-[150%] h-[120%] rounded-full bg-ember-glow blur-xl"
+                className="absolute bottom-0 w-[150%] h-[120%] rounded-full bg-ember-glow blur-md will-change-transform" // Reduced blur, added will-change
             />
 
             {/* Flame Body */}
@@ -37,7 +37,7 @@ export function CandleFlame({ className, size = "md" }: { className?: string, si
                     repeat: Infinity,
                     ease: "easeInOut",
                 }}
-                className="w-full h-full bg-gradient-to-t from-orange-600 via-ember to-yellow-100 rounded-b-full rounded-t-[50%] opacity-90 shadow-[0_0_20px_rgba(251,191,36,0.5)]"
+                className="w-full h-full bg-gradient-to-t from-orange-600 via-ember to-yellow-100 rounded-b-full rounded-t-[50%] opacity-90 shadow-[0_0_15px_rgba(251,191,36,0.5)] will-change-transform" // Added will-change
                 style={{
                     borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
                     borderTopLeftRadius: "50%",

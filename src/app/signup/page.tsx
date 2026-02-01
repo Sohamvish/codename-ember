@@ -10,17 +10,26 @@ import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 
+import { useToast } from "@/components/ui/Toast";
+
 export default function SignupPage() {
     const [isLogin, setIsLogin] = useState(false);
     const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
     // Initialize Supabase client
     const supabase = createClient();
     const router = useRouter();
+    const { showToast } = useToast();
 
     const handleAuth = async () => {
+        if (!isLogin && !username) {
+            showToast("Please choose a Keeper Name.", "error");
+            return;
+        }
+
         setLoading(true);
         try {
             const { error } = isLogin
@@ -28,10 +37,11 @@ export default function SignupPage() {
                 : await supabase.auth.signUp({ email, password });
 
             if (error) {
-                alert(error.message);
+                showToast(error.message, "error");
             } else {
                 // Success!
                 if (isLogin) {
+                    showToast("Welcome back, keeper.", "success");
                     router.push("/hearth");
                 } else {
                     // Create Profile Row manually (redundancy for safety)
@@ -39,16 +49,16 @@ export default function SignupPage() {
                     if (user) {
                         await supabase.from('profiles').insert({
                             id: user.id,
-                            username: email.split('@')[0], // Default username from email
+                            username: username, // Use custom username
                             avatar_url: null,
                             updated_at: new Date().toISOString(),
                         });
                     }
-                    alert("Check your email for the confirmation link!");
+                    showToast("Check your email for the confirmation link!", "info");
                 }
             }
         } catch (e: any) {
-            alert("An error occurred: " + e.message);
+            showToast("An error occurred: " + e.message, "error");
         } finally {
             setLoading(false);
         }
@@ -75,49 +85,53 @@ export default function SignupPage() {
                 </div>
 
                 <GlassCard className="space-y-6 p-8 border-stone-800/50 bg-stone-900/60 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-                    <div className="space-y-4">
-                        <div className="relative group">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Email"
-                                className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
-                            />
+                    <form onSubmit={(e) => { e.preventDefault(); handleAuth(); }} className="space-y-6">
+                        <div className="space-y-4">
+                            {/* Username Input - Only for Signup */}
+                            {!isLogin && (
+                                <div className="relative group">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors font-mono">@</span>
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="Keeper Name"
+                                        className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="relative group">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Email"
+                                    className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
+                                />
+                            </div>
+                            <div className="relative group">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Password"
+                                    className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
+                                />
+                            </div>
                         </div>
-                        <div className="relative group">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 group-focus-within:text-ember transition-colors" size={18} />
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Password"
-                                className="w-full bg-black/20 border border-stone-800 rounded-xl py-3 pl-10 pr-4 text-soothe placeholder:text-stone-600 focus:outline-none focus:border-ember/50 focus:ring-1 focus:ring-ember/20 transition-all"
-                            />
-                        </div>
-                    </div>
 
-                    <button
-                        onClick={handleAuth}
-                        disabled={loading}
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-ember to-orange-600 text-black font-bold shadow-lg shadow-orange-900/20 hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <span>{loading ? "Processing..." : (isLogin ? "Sign In" : "Create Account")}</span>
-                        {!loading && <ArrowRight size={18} />}
-                    </button>
-
-                    <div className="relative flex items-center py-2">
-                        <div className="flex-grow border-t border-stone-800"></div>
-                        <span className="flex-shrink-0 mx-4 text-xs text-stone-600">OR</span>
-                        <div className="flex-grow border-t border-stone-800"></div>
-                    </div>
-
-                    <Link href="/hearth">
-                        <button className="w-full py-3 rounded-xl border border-stone-800 bg-black/20 text-stone-400 hover:bg-black/40 hover:text-stone-200 transition-colors text-sm font-medium">
-                            Continue as Guest
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-ember to-orange-600 text-black font-bold shadow-lg shadow-orange-900/20 hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span>{loading ? "Processing..." : (isLogin ? "Sign In" : "Create Account")}</span>
+                            {!loading && <ArrowRight size={18} />}
                         </button>
-                    </Link>
+                    </form>
                 </GlassCard>
 
                 <p className="text-center mt-6 text-xs text-stone-500">

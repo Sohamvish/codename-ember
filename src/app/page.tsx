@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { CandleFlame } from "@/components/ui/CandleFlame";
 import Link from "next/link";
 
-import { QuoteCandle } from "@/components/ui/QuoteCandle";
+
 
 export default function Home() {
   return (
@@ -31,24 +31,14 @@ export default function Home() {
           </p>
         </motion.div>
 
-        {/* Quote Candles - Surrounding the main button */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Top Left */}
-          <QuoteCandle quote="You are stronger than you know." className="pointer-events-auto top-0 -left-12 md:-left-32" delay={1.2} />
-          {/* Top Right */}
-          <QuoteCandle quote="Your story matters." className="pointer-events-auto top-10 -right-8 md:-right-24" delay={1.4} />
-          {/* Bottom Left */}
-          <QuoteCandle quote="Healing is not linear." className="pointer-events-auto bottom-20 -left-6 md:-left-20" delay={1.6} />
-          {/* Bottom Right */}
-          <QuoteCandle quote="There is hope in the dark." className="pointer-events-auto bottom-0 -right-10 md:-right-28" delay={1.8} />
-        </div>
+        {/* Quote Candles - Moved to GlobalCandles in layout */}
 
         {/* Interactive Candle Button */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="relative group cursor-pointer"
+          className="relative group cursor-pointer z-20"
         >
           <Link href="/signup">
             <div className="relative flex flex-col items-center gap-6">
@@ -81,17 +71,17 @@ export default function Home() {
           </Link>
         </motion.div>
 
-        {/* Footer/Disclaimer */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 1 }}
-          className="absolute bottom-8 text-xs text-stone-700 max-w-xs"
-        >
-          A safe, anonymous space for women to share their stories and find support.
-        </motion.p>
-
       </main>
+
+      {/* Footer/Disclaimer - Moved outside main to stick to bottom of screen */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2, duration: 1 }}
+        className="absolute bottom-6 text-[10px] text-stone-700 max-w-xs text-center z-10"
+      >
+        A safe, anonymous space for women to share their stories and find support.
+      </motion.p>
     </div>
   );
 }
